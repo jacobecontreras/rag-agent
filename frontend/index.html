@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header" id="chatHeader">
+            <div class="header-branding">
+                <img src="assets/text.png" alt="Logo" class="text-image">
+            </div>
+            <div class="header-navigation">
+                <div class="agent-nav">Agent</div>
+                <div class="settings-nav">Settings</div>
+            </div>
+        </div>
+        <div class="agent-view" id="agentView">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message">
+                    <div class="message-content">Hello, I'm your aLEAPP/iLEAPP AI Powered Report Analyzer. Ask me a question!</div>
+                </div>
+            </div>
+
+            <div class="chat-input">
+                <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+                <div class="input-actions">
+                    <button id="uploadButton" class="upload-button">
+                        <img src="assets/attachment.svg" alt="Upload" class="upload-icon">
+                        Upload
+                    </button>
+                    <button id="sendButton" class="send-button">
+                    <img src="assets/send-arrow.svg" alt="Send" class="send-icon">
+                </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-view" id="settingsView" style="display: none;">
+             <div class="settings-temp">Settings page coming soon...</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

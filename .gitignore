@@ -1,2 +1,12 @@
 # Project Plan
 PLAN.md
+
+# Python
+
+__pycache__
+
+# Tests
+
+backend/tests/
+
+.DS_Store
