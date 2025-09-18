@@ -30,7 +30,7 @@ body {
     display: flex;
     align-items: center;
     padding: 15px;
-    margin: 20px 20px 20px 20px;
+    margin: 0 10px 20px 10px;
 }
 
 /* Header: Left Side (Branding) */
@@ -55,27 +55,35 @@ body {
 }
 
 .agent-nav {
-    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
 }
 
 .agent-nav:hover {
-    color: var(--text-primary);
+    opacity: .7;
 }
 
 .agent-nav.active {
-    color: var(--text-primary);
+    color: black;
+    background: #ececec;
 }
 
 .settings-nav {
-    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
 }
 
 .settings-nav:hover {
-    color: var(--text-primary);
+    opacity: .7;
 }
 
 .settings-nav.active {
-    color: var(--text-primary);
+    color: black;
+    background: #ececec;
 }
 
 /* AGENT VIEW */
@@ -101,7 +109,7 @@ body {
 
 .message {
     max-width: 60%;
-    padding: 10px;
+    padding: 15px;
 }
 
 .user-message {
@@ -152,7 +160,7 @@ body {
 .send-button {
     border: none;
     padding: 0;
-    background: #ffffff;
+    background: #ececec;
     color: var(--text-primary);
     border-radius: 50%;
     width: 40px;
@@ -163,7 +171,7 @@ body {
 }
 
 .send-button:hover {
-    opacity: .5;
+    opacity: .7;
 }
 
 .send-icon {
@@ -180,7 +188,7 @@ body {
 }
 
 .upload-button:hover {
-    opacity: .5;
+    opacity: .7;
 }
 
 .upload-icon {
@@ -202,3 +210,13 @@ body {
     color: var(--text-primary);
     text-align: center;
 }
+
+/* CREATOR INFO */
+
+.creator-info {
+    font-size: 12px;
+    text-align: center;
+    padding-bottom: 20px;
+    color: var(--text-secondary);
+    left: 50%;
+  }
