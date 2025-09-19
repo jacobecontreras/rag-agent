@@ -5,6 +5,7 @@
     --text-secondary: #808080;
     --border-color: #444444;
     --border-radius: 25px;
+    --code-block-background: #171717;
 }
 
 body {
@@ -108,7 +109,6 @@ body {
 }
 
 .message {
-    max-width: 60%;
     padding: 15px;
 }
 
@@ -117,11 +117,77 @@ body {
     color: var(--text-primary);
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
+    max-width: 60%;
 }
 
 .ai-message {
     align-self: flex-start;
     color: var(--text-primary);
+}
+
+.ai-message.streaming .message-content::after {
+    content: 'Thinking...';
+    color: var(--text-secondary);
+}
+
+.message-content hr {
+    border: none;
+    height: 1px;
+    background: var(--text-secondary);
+    opacity: 0.3;
+    margin: 1em 0;
+}
+
+.message-content {
+    line-height: 1.5;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    color: var(--text-primary);
+}
+
+.message-content p {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+}
+
+.message-content code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.message-content pre {
+    background: var(--code-block-background);
+    padding: 1em;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    margin: 0.5em 0;
+}
+
+.message-content blockquote {
+    border-left: 3px solid var(--text-secondary);
+    margin: 0.5em 0;
+    padding-left: 1em;
+    color: var(--text-secondary);
+}
+
+.message-content ul,
+.message-content ol {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+}
+
+.message-content a {
+    color: #4A90E2;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
 }
 
 /* Agent: Input Section */

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Interface</title>
+    <title>aiLEAPP</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -29,7 +29,7 @@
                 <div class="input-actions">
                     <button id="uploadButton" class="upload-button">
                         <img src="assets/attachment.svg" alt="Upload" class="upload-icon">
-                        Upload
+                        Upload Report
                     </button>
                     <button id="sendButton" class="send-button">
                     <img src="assets/send-arrow.svg" alt="Send" class="send-icon">
@@ -44,6 +44,11 @@
         <div class="creator-info">aiLEAPP can make mistakes. Check important info.</div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/viewManager.js"></script>
+    <script src="js/uiHelpers.js"></script>
+    <script src="js/scrollManager.js"></script>
+    <script src="js/chatService.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
