@@ -1,0 +1,24 @@
+{
+  "name": "ai-leapp-desktop",
+  "version": "1.0.0",
+  "description": "aLEAPP/iLEAPP AI Powered Report Analyzer - Desktop App",
+  "main": "main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "electron": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "desktop",
+    "forensics",
+    "ai",
+    "leapp"
+  ],
+  "author": "Jacob Contreras",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^38.1.2"
+  }
+}

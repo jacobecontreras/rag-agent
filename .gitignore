@@ -1,5 +1,5 @@
 # Project Plan
-PLAN.md
+MVP.md
 
 # Python
 
@@ -17,3 +17,16 @@ backend/tests/
 # venv
 
 backend/venv/
+
+# Database files
+backend/database/leapp_forensics.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js
+node_modules/
+
+# Python cache
+*.py[cod]
+*$py.class

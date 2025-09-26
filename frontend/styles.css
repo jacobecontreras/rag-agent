@@ -110,6 +110,8 @@ body {
 
 .message {
     padding: 15px;
+    white-space: pre-wrap;
+    max-width: 100%;
 }
 
 .user-message {
@@ -118,12 +120,20 @@ body {
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     max-width: 60%;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+    width: fit-content;
 }
 
 .ai-message {
     align-self: flex-start;
     color: var(--text-primary);
+    white-space: pre-wrap;
+    box-sizing: border-box;
+    width: auto;
+    max-width: 100%;
 }
+
 
 .ai-message.streaming .message-content::after {
     content: 'Thinking...';

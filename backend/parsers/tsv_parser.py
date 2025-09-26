@@ -3,7 +3,7 @@ import csv
 csv.field_size_limit(1000000)
 from typing import List, Dict, Any
 
-
+# Parse a tsv file row by row
 def parse_tsv(file_path: str) -> List[Dict[str, Any]]:
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"TSV file not found {file_path}")
@@ -17,7 +17,7 @@ def parse_tsv(file_path: str) -> List[Dict[str, Any]]:
     
     return data
 
-
+# Finds and parses tsv files
 def parse_directory(directory_path: str) -> Dict[str, List[Dict[str, Any]]]:
     if not os.path.exists(directory_path):
         raise FileNotFoundError(f"LEAPP Directory not found {directory_path}")
