@@ -71,7 +71,7 @@ const Chat = {
         try {
             await AIService.sendMessage(
                 message,
-                (accumulatedText) => { // Receive accumulated text as tokens stream in
+                (token, accumulatedText) => { // Receive token and accumulated text as tokens stream in
                     Message.updateStreamingMessage(streamingMessage, accumulatedText); // Update streaming message in real time
 
                     // Handle auto-scroll

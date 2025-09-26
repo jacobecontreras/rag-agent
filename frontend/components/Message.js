@@ -20,8 +20,8 @@ const Message = {
         const messageContent = messageElement.querySelector('.message-content');
         messageContent.innerHTML = marked.parse(content);
 
-        // Remove streaming class on first token (when content is not empty)
-        if (content.trim() && messageElement.classList.contains('streaming')) {
+        // Remove streaming class immediately when content is received
+        if (messageElement.classList.contains('streaming')) {
             messageElement.classList.remove('streaming');
         }
     },
