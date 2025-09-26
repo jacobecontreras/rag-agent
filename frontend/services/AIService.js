@@ -49,6 +49,9 @@ const AIService = {
                     console.log('Streaming connection established');
                 };
 
+                // Return the EventSource immediately so it can be managed externally
+                resolve(eventSource);
+
             } catch (error) {
                 console.error('AI Service Error:', error);
                 if (onError) {

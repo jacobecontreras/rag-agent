@@ -4,12 +4,21 @@ const Chat = {
         this.chatMessages = document.getElementById('chatMessages');
         this.sendButton = document.getElementById('sendButton');
         this.uploadButton = document.getElementById('uploadButton');
+        this.isStreaming = false;
+        this.currentEventSource = null;
         this.setupEventListeners();
     },
 
     // Setup event listeners for sending messages (clicking sendButton or pressing Enter)
     setupEventListeners() {
-        this.sendButton.addEventListener('click', () => this.handleSendMessage());
+        this.sendButton.addEventListener('click', () => {
+            if (this.isStreaming) {
+                this.handleStopGeneration();
+            } else {
+                this.handleSendMessage();
+            }
+        });
+
         if (this.uploadButton) {
             this.uploadButton.addEventListener('click', () => this.handleUploadReport());
         }
@@ -17,7 +26,9 @@ const Chat = {
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'messageInput') {
                 e.preventDefault();
-                this.handleSendMessage();
+                if (!this.isStreaming) {
+                    this.handleSendMessage();
+                }
             }
         });
     },
@@ -35,7 +46,32 @@ const Chat = {
             this.addUserMessage(message); // Render user message in chat
             DOMUtils.clearInput(); // Clear input
             UIManager.scrollToBottom(); // Scoll to bottom of chat container
+            this.setStreamingState(true); // Switch to stop button
             await this.getAIResponse(message); // Send user message and wait for response
+        }
+    },
+
+    // Called when user presses stop button during streaming
+    handleStopGeneration() {
+        if (this.currentEventSource) {
+            this.currentEventSource.close();
+            this.currentEventSource = null;
+        }
+        // Remove "Thinking..." text by finding and removing streaming class from any streaming messages
+        const streamingMessages = this.chatMessages.querySelectorAll('.ai-message.streaming');
+        streamingMessages.forEach(message => {
+            message.classList.remove('streaming');
+        });
+        this.setStreamingState(false);
+    },
+
+    // Set streaming state and update UI
+    setStreamingState(isStreaming) {
+        this.isStreaming = isStreaming;
+        if (isStreaming) {
+            this.sendButton.classList.add('stop-button');
+        } else {
+            this.sendButton.classList.remove('stop-button');
         }
     },
 
@@ -65,11 +101,11 @@ const Chat = {
     // Sends user prompt and recieves AI response
     async getAIResponse(message) {
         // Create the container for the AI streaming message
-        const streamingMessage = Message.createStreamingMessage(); 
+        const streamingMessage = Message.createStreamingMessage();
         this.chatMessages.appendChild(streamingMessage);
 
         try {
-            await AIService.sendMessage(
+            this.currentEventSource = await AIService.sendMessage(
                 message,
                 (token, accumulatedText) => { // Receive token and accumulated text as tokens stream in
                     Message.updateStreamingMessage(streamingMessage, accumulatedText); // Update streaming message in real time
@@ -82,15 +118,21 @@ const Chat = {
                 (finalText) => {
                     // Completion callback
                     Message.updateStreamingMessage(streamingMessage, finalText);
+                    this.setStreamingState(false); // Reset to send button
+                    this.currentEventSource = null;
                 },
                 () => {
                     // Error callback
                     Message.setErrorMessage(streamingMessage, 'Sorry, there was an error processing your request.');
+                    this.setStreamingState(false); // Reset to send button
+                    this.currentEventSource = null;
                 }
             );
         } catch (error) {
             console.error('Error in getAIResponse:', error);
             Message.setErrorMessage(streamingMessage, 'Sorry, there was an error processing your request.');
+            this.setStreamingState(false); // Reset to send button
+            this.currentEventSource = null;
         }
     }
 };
