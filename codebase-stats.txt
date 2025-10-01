@@ -1,0 +1,5 @@
+Lines of code(Fronend): 415
+Lines of code (Backend): 318
+Lines of code (Electron):
+
+Total: 733

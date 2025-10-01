@@ -10,7 +10,7 @@ const UploadService = {
         }
     },
 
-    // Send the directory path to the backends /upload endpoint where it begins processing
+    // Send the directory path for processing
     async uploadReport(directoryPath) {
         try {
             const response = await fetch('http://localhost:8000/upload', {

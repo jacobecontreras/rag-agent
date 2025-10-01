@@ -19,14 +19,15 @@ module.exports = {
   // File paths
   paths: {
     frontend: path.join(__dirname, '..', 'frontend', 'index.html'),
-    icon: path.join(__dirname, '..', 'frontend', 'assets', 'text.png'),
+    icon: path.join(__dirname, '..', 'frontend', 'assets', 'logo.png'),
     backendScript: 'backend/main.py'
   },
 
   // Backend configuration
   backend: {
     pythonCommand: 'python3',
-    args: ['backend/main.py'],
+    args: ['-c', 'import sys; sys.path.insert(0, "backend"); import main; import uvicorn; uvicorn.run(main.app, host="0.0.0.0", port=8000)'],
+    cwd: path.join(__dirname, '..'),
     stdio: 'pipe'
   },
 

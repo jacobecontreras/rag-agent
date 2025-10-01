@@ -1,7 +1,7 @@
 import os
 import csv
-csv.field_size_limit(1000000)
 from typing import List, Dict, Any
+csv.field_size_limit(10000000) # 10MB
 
 # Parse a tsv file row by row
 def parse_tsv(file_path: str) -> List[Dict[str, Any]]:
@@ -10,15 +10,15 @@ def parse_tsv(file_path: str) -> List[Dict[str, Any]]:
     
     data = []
 
-    with open(file_path, 'r', encoding='utf-8') as tsv_file:
+    with open(file_path) as tsv_file:
         reader = csv.DictReader(tsv_file, delimiter='\t')
         for row in reader:
-            data.append(dict(row))
+            data.append(row)
     
     return data
 
 # Finds and parses tsv files
-def parse_directory(directory_path: str) -> Dict[str, List[Dict[str, Any]]]:
+def parse_tsv_directory(directory_path: str) -> Dict[str, List[Dict[str, Any]]]:
     if not os.path.exists(directory_path):
         raise FileNotFoundError(f"LEAPP Directory not found {directory_path}")
     

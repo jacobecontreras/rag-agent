@@ -1,138 +1,141 @@
 const Chat = {
-    // Get DOM element references and setup event listeners
     init() {
         this.chatMessages = document.getElementById('chatMessages');
         this.sendButton = document.getElementById('sendButton');
         this.uploadButton = document.getElementById('uploadButton');
+        this.apiKeyInput = document.getElementById('apiKeyInput');
+        this.saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+        this.messageInput = document.getElementById('messageInput');
         this.isStreaming = false;
-        this.currentEventSource = null;
+        this.currentResponse = null;
+
+        this.loadApiKey();
         this.setupEventListeners();
     },
 
-    // Setup event listeners for sending messages (clicking sendButton or pressing Enter)
     setupEventListeners() {
         this.sendButton.addEventListener('click', () => {
-            if (this.isStreaming) {
-                this.handleStopGeneration();
-            } else {
+            this.isStreaming ? this.handleStopGeneration() : this.handleSendMessage();
+        });
+
+        this.uploadButton.addEventListener('click', () => this.handleUploadReport());
+        this.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
+
+        this.apiKeyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.saveApiKey();
+        });
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'messageInput' && !this.isStreaming) {
+                e.preventDefault();
                 this.handleSendMessage();
             }
         });
-
-        if (this.uploadButton) {
-            this.uploadButton.addEventListener('click', () => this.handleUploadReport());
-        }
-
-        document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'messageInput') {
-                e.preventDefault();
-                if (!this.isStreaming) {
-                    this.handleSendMessage();
-                }
-            }
-        });
     },
 
-    // Render a user's message
+    getInputValue() {
+        return this.messageInput.value;
+    },
+
+    clearInput() {
+        this.messageInput.value = '';
+        UIManager.autoResizeTextarea();
+    },
+
     addUserMessage(text) {
-        const messageElement = Message.createUserMessage(text);
-        this.chatMessages.appendChild(messageElement);
+        this.chatMessages.appendChild(Message.createUserMessage(text));
     },
 
-    // Called when a user pressed send button
     async handleSendMessage() {
-        const message = DOMUtils.getInputValue();
-        if (message) {
-            this.addUserMessage(message); // Render user message in chat
-            DOMUtils.clearInput(); // Clear input
-            UIManager.scrollToBottom(); // Scoll to bottom of chat container
-            this.setStreamingState(true); // Switch to stop button
-            await this.getAIResponse(message); // Send user message and wait for response
-        }
+        const message = this.getInputValue();
+        if (!message) return;
+
+        this.addUserMessage(message);
+        this.clearInput();
+        this.setStreamingState(true);
+        await this.getAIResponse(message);
     },
 
-    // Called when user presses stop button during streaming
     handleStopGeneration() {
-        if (this.currentEventSource) {
-            this.currentEventSource.close();
-            this.currentEventSource = null;
+        if (this.currentResponse?.abort) {
+            this.currentResponse.abort();
         }
-        // Remove "Thinking..." text by finding and removing streaming class from any streaming messages
-        const streamingMessages = this.chatMessages.querySelectorAll('.ai-message.streaming');
-        streamingMessages.forEach(message => {
-            message.classList.remove('streaming');
-        });
+        this.clearStreamingState();
         this.setStreamingState(false);
     },
 
-    // Set streaming state and update UI
     setStreamingState(isStreaming) {
         this.isStreaming = isStreaming;
-        if (isStreaming) {
-            this.sendButton.classList.add('stop-button');
-        } else {
-            this.sendButton.classList.remove('stop-button');
-        }
+        this.sendButton.classList.toggle('stop-button', isStreaming);
     },
 
-    // Called when user pressess upload button
+    clearStreamingState() {
+        this.currentResponse = null;
+        this.chatMessages.querySelectorAll('.ai-message.streaming')
+            .forEach(msg => msg.classList.remove('streaming'));
+    },
+
     async handleUploadReport() {
         try {
-            // Open directory selector and wait for result
             const selectResult = await UploadService.selectDirectory();
+            if (!selectResult.success) return;
 
-            // If no result, return
-            if (!selectResult.success) {
-                return;
-            }
-
-            // Send chosen directory path to the backend and wait for reponse
             const uploadResult = await UploadService.uploadReport(selectResult.directory_path);
-
             if (uploadResult.success) {
-                // Upload successful
-                console.log('Report upload started successfully');
+                this.addUserMessage('Report uploaded successfully!');
             }
         } catch (error) {
             console.error('Upload failed:', error);
         }
     },
 
-    // Sends user prompt and recieves AI response
     async getAIResponse(message) {
-        // Create the container for the AI streaming message
         const streamingMessage = Message.createStreamingMessage();
         this.chatMessages.appendChild(streamingMessage);
+        UIManager.scrollToBottom();
 
         try {
-            this.currentEventSource = await AIService.sendMessage(
+            const response = AIService.sendMessage(
                 message,
-                (token, accumulatedText) => { // Receive token and accumulated text as tokens stream in
-                    Message.updateStreamingMessage(streamingMessage, accumulatedText); // Update streaming message in real time
-
-                    // Handle auto-scroll
+                (token, accumulatedText) => {
+                    Message.updateStreamingMessage(streamingMessage, accumulatedText);
                     if (UIManager.shouldAutoScroll()) {
                         UIManager.scrollToBottom();
                     }
                 },
                 (finalText) => {
-                    // Completion callback
                     Message.updateStreamingMessage(streamingMessage, finalText);
-                    this.setStreamingState(false); // Reset to send button
-                    this.currentEventSource = null;
+                    this.clearStreamingState();
+                    this.setStreamingState(false);
                 },
                 () => {
-                    // Error callback
                     Message.setErrorMessage(streamingMessage, 'Sorry, there was an error processing your request.');
-                    this.setStreamingState(false); // Reset to send button
-                    this.currentEventSource = null;
+                    this.clearStreamingState();
+                    this.setStreamingState(false);
                 }
             );
+
+            this.currentResponse = response;
+            await response.promise;
         } catch (error) {
             console.error('Error in getAIResponse:', error);
             Message.setErrorMessage(streamingMessage, 'Sorry, there was an error processing your request.');
-            this.setStreamingState(false); // Reset to send button
-            this.currentEventSource = null;
+            this.clearStreamingState();
+            this.setStreamingState(false);
+        }
+    },
+
+    loadApiKey() {
+        const savedKey = localStorage.getItem('zai_api_key');
+        if (savedKey) this.apiKeyInput.value = savedKey;
+    },
+
+    saveApiKey() {
+        const apiKey = this.apiKeyInput.value.trim();
+        if (apiKey) {
+            localStorage.setItem('zai_api_key', apiKey);
+        } else {
+            localStorage.removeItem('zai_api_key');
         }
     }
 };

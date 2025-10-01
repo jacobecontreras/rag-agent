@@ -10,18 +10,15 @@
     <div class="chat-container">
         <div class="chat-header" id="chatHeader">
             <div class="header-branding">
-                <img src="assets/text.png" alt="Logo" class="text-image">
+                <img src="assets/logo.png" alt="Logo" class="text-image">
             </div>
-            <div class="header-navigation">
-                <div class="agent-nav">Agent</div>
-                <div class="settings-nav">Settings</div>
+            <div class="header-api-section">
+                <input type="password" id="apiKeyInput" placeholder="Enter Z AI API key" class="header-api-key-input">
+                <button id="saveApiKeyBtn" class="header-save-api-key-btn">Save</button>
             </div>
         </div>
-        <div class="agent-view" id="agentView">
+        <div class="chat-content" id="chatContent">
             <div class="chat-messages" id="chatMessages">
-                <div class="message ai-message">
-                    <div class="message-content">Hello, I'm your aLEAPP/iLEAPP AI Powered Report Analyzer. Ask me a question!</div>
-                </div>
             </div>
 
             <div class="chat-input">
@@ -39,15 +36,11 @@
             </div>
         </div>
 
-        <div class="settings-view" id="settingsView" style="display: none;">
-             <div class="settings-temp">Settings page coming soon...</div>
-        </div>
-        <div class="creator-info">aiLEAPP can make mistakes. Check important info.</div>
+              <div class="creator-info">aiLEAPP can make mistakes. Check important info.</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="utils/UIManager.js"></script>
-    <script src="utils/DOMUtils.js"></script>
     <script src="services/AIService.js"></script>
     <script src="services/UploadService.js"></script>
     <script src="components/Message.js"></script>
