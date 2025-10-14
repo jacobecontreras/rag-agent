@@ -2,6 +2,7 @@ import os
 from parsers.tsv_parser import parse_tsv_directory
 from parsers.leapp_db_parser import parse_spatial_db, parse_timeline_db
 from database.database import update_report_status, store_tsv_data, store_spatial_data, store_timeline_data
+from utils.embedding_utils import embed_job_data
 
 # Ensures the chosen directory contains the correct directory names
 def validate_leapp_directory(directory_path: str) -> bool:
@@ -40,6 +41,9 @@ def process_leapp_report(job_name: str, directory_path: str):
             store_timeline_data(job_name, timeline_data)
 
         update_report_status(job_name, "completed")
+
+        # Start embedding process
+        embed_job_data(job_name)
 
     except Exception as e:
         update_report_status(job_name, "failed", str(e))

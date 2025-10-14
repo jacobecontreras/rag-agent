@@ -4,10 +4,10 @@ MVP.md
 # Python
 
 __pycache__
+*.py[cod]
+*$py.class
 
-# Tests
-
-backend/tests/
+# Mac
 
 .DS_Store
 
@@ -18,11 +18,9 @@ backend/tests/
 
 backend/venv/
 
-# Database files
+# Database
 backend/database/leapp_forensics.db
-*.db
-*.sqlite
-*.sqlite3
+backend/database/chroma/
 
 # Node.js
 node_modules/
