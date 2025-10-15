@@ -1,13 +1,14 @@
+// Backend process setup and management
 const { spawn } = require('child_process');
 const config = require('./config');
 
 let backendProcess = null;
 
+// Start backendProcess and handle console logs
 function startBackend() {
-  // Start the FastAPI backend
-  backendProcess = spawn(config.backend.pythonCommand, config.backend.args, {
-    ...config.backend.stdio && { stdio: config.backend.stdio }
-  });
+  if (config.backend.stdio) {
+    backendProcess = spawn(config.backend.pythonCommand, config.backend.args, {stdio: config.backend.stdio});
+  }
 
   backendProcess.stdout.on('data', (data) => {
     console.log(`Backend stdout: ${data}`);
@@ -24,6 +25,7 @@ function startBackend() {
   return backendProcess;
 }
 
+// Check if backendProcess exists, if so kill it
 function stopBackend() {
   if (backendProcess) {
     backendProcess.kill();
@@ -32,6 +34,7 @@ function stopBackend() {
   }
 }
 
+// Getter for backendProcess
 function getBackendProcess() {
   return backendProcess;
 }

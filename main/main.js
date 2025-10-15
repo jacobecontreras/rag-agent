@@ -2,31 +2,13 @@
 const { app, BrowserWindow } = require('electron');
 const { startBackend, stopBackend } = require('./backend');
 const { registerHandlers, unregisterHandlers } = require('./handlers');
-const config = require('./config');
-const path = require('path');
-
-function createWindow() {
-  const mainWindow = new BrowserWindow({
-    ...config.window,
-    icon: config.paths.icon
-  });
-
-  // Load the frontend
-  mainWindow.loadFile(config.paths.frontend);
-
-  // Show window when ready
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-  });
-
-  return mainWindow;
-}
+const { createWindow } = require('./frontend');
 
 function initializeApp() {
   // Handle app ready event
   app.whenReady().then(() => {
-    const mainWindow = createWindow();
-    startBackend();
+    const mainWindow = createWindow(); // Start frontend
+    startBackend(); // Start backend
     registerHandlers(mainWindow);
 
     // Handle app activation (macOS)

@@ -1,3 +1,4 @@
+// Sets up 'select-directory' handler so the frontend can request native folder selection
 const { ipcMain, dialog } = require('electron');
 
 function registerHandlers(mainWindow) {
