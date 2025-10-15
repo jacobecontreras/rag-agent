@@ -2,8 +2,7 @@ const UploadService = {
     // Allow user directory selection using electron's API
     async selectDirectory() {
         try {
-            const result = await window.electronAPI.selectDirectory();
-            return JSON.parse(result);
+            return await window.electronAPI.selectDirectory();
         } catch (error) {
             console.error('Directory selection failed:', error);
             throw error;

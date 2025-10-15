@@ -2,7 +2,7 @@
   "name": "ai-leapp-desktop",
   "version": "1.0.0",
   "description": "aLEAPP/iLEAPP AI Powered Report Analyzer - Desktop App",
-  "main": "main/index.js",
+  "main": "main/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",

@@ -1,13 +1,11 @@
 const { ipcMain, dialog } = require('electron');
-const { getMainWindow } = require('./window');
 
-function registerHandlers() {
+function registerHandlers(mainWindow) {
   // Handle directory selection
   ipcMain.handle('select-directory', async () => {
-    const mainWindow = getMainWindow();
 
     if (!mainWindow) {
-      return JSON.stringify({ success: false, error: 'No main window available' });
+      return { success: false, error: 'No main window available' };
     }
 
     try {
@@ -17,13 +15,13 @@ function registerHandlers() {
       });
 
       if (result.canceled) {
-        return JSON.stringify({ success: false, error: 'User cancelled directory selection' });
+        return { success: false, error: 'User cancelled directory selection' };
       } else {
-        return JSON.stringify({ success: true, directory_path: result.filePaths[0] });
+        return { success: true, directory_path: result.filePaths[0] };
       }
     } catch (error) {
       console.error('Directory selection error:', error);
-      return JSON.stringify({ success: false, error: error.message });
+      return { success: false, error: error.message };
     }
   });
 }

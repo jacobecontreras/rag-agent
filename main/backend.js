@@ -1,5 +1,4 @@
 const { spawn } = require('child_process');
-const path = require('path');
 const config = require('./config');
 
 let backendProcess = null;
@@ -7,7 +6,6 @@ let backendProcess = null;
 function startBackend() {
   // Start the FastAPI backend
   backendProcess = spawn(config.backend.pythonCommand, config.backend.args, {
-    cwd: path.join(__dirname, '..'),
     ...config.backend.stdio && { stdio: config.backend.stdio }
   });
 

@@ -9,9 +9,9 @@ module.exports = {
     minHeight: 600,
     show: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webSecurity: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
       preload: path.join(__dirname, 'preload.js')
     }
   },
