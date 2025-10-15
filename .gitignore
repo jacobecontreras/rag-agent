@@ -1,6 +1,3 @@
-# Project Plan
-MVP.md
-
 # Python
 
 __pycache__
@@ -24,7 +21,3 @@ backend/database/chroma/
 
 # Node.js
 node_modules/
-
-# Python cache
-*.py[cod]
-*$py.class

@@ -1,35 +1,21 @@
 const Message = {
-    // Used to render user messages in chat
+    createMessage(text, className, processor = null) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${className}`;
+        const content = processor ? processor(text) : text;
+        messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+        return messageDiv;
+    },
+
     createUserMessage(text) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message user-message';
-        messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
-        return messageDiv;
+        return Message.createMessage(text, 'user-message');
     },
 
-    // Used to render streaming messages in chat
-    createStreamingMessage() {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message ai-message streaming';
-        messageDiv.innerHTML = '<div class="message-content"></div>';
-        return messageDiv;
+    createAIMessage(text) {
+        return Message.createMessage(text, 'ai-message', (content) => marked.parse(content));
     },
 
-    // Used to update streaming messages in real time in chat
-    updateStreamingMessage(messageElement, content) {
-        const messageContent = messageElement.querySelector('.message-content');
-        messageContent.innerHTML = marked.parse(content);
-
-        // Remove streaming class immediately when content is received
-        if (messageElement.classList.contains('streaming')) {
-            messageElement.classList.remove('streaming');
-        }
-    },
-
-    // Users to render error messages in chat
-    setErrorMessage(messageElement, errorText) {
-        const messageContent = messageElement.querySelector('.message-content');
-        messageContent.textContent = errorText;
-        messageElement.classList.remove('streaming');
+    createErrorMessage(errorText) {
+        return Message.createMessage(errorText, 'ai-message error');
     }
 };

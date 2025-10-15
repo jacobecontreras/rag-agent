@@ -7,19 +7,15 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header" id="chatHeader">
+    <div class="app-container">
+        <header class="app-header" id="chatHeader">
             <div class="header-branding">
                 <img src="assets/logo.png" alt="Logo" class="text-image">
             </div>
-            <div class="header-api-section">
-                <input type="password" id="apiKeyInput" placeholder="Enter Z AI API key" class="header-api-key-input">
-                <button id="saveApiKeyBtn" class="header-save-api-key-btn">Save</button>
-            </div>
-        </div>
-        <div class="chat-content" id="chatContent">
-            <div class="chat-messages" id="chatMessages">
-            </div>
+        </header>
+
+        <main class="chat-content" id="chatContent">
+            <div class="chat-messages" id="chatMessages"></div>
 
             <div class="chat-input">
                 <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
@@ -29,14 +25,13 @@
                         Upload Report
                     </button>
                     <button id="sendButton" class="send-button">
-                    <img src="assets/send-arrow.svg" alt="Send" class="send-icon">
-                    <img src="assets/stop-icon.svg" alt="Stop" class="stop-icon">
-                </button>
+                        <img src="assets/send-arrow.svg" alt="Send" class="send-icon">
+                    </button>
                 </div>
             </div>
-        </div>
+        </main>
 
-              <div class="creator-info">aiLEAPP can make mistakes. Check important info.</div>
+        <footer class="disclaimer-message">aiLEAPP can make mistakes. Check important info.</footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
