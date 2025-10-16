@@ -1,34 +1,23 @@
-// Configuration for Ollama API
-const OLLAMA_CONFIG = {
-    url: 'http://localhost:11434/api/chat',
-    model: 'gpt-oss:20b',
-    systemPrompt: "You are a LEAPP forensic analysis assistant. You specialize in analyzing aLEAPP and iLEAPP reports. Help users analyze forensic data and answer questions about your LEAPP reports."
-};
-
-// AI service for handling Ollama API calls
+// AI service for handling backend chat API calls
 const AIService = {
-    // Sends a message to Ollama API and gets a response
+    // Sends a message to backend chat API and gets a response
     async sendMessage(message) {
-        const response = await fetch(OLLAMA_CONFIG.url, {
+        const response = await fetch(`http://localhost:8000/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: OLLAMA_CONFIG.model,
-                messages: [
-                    { role: "system", content: OLLAMA_CONFIG.systemPrompt },
-                    { role: "user", content: message }
-                ],
-                stream: false
+                message: message
             })
         });
 
         if (!response.ok) {
-            throw new Error(`Ollama API error! status: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`Backend API error! status: ${response.status}, details: ${errorText}`);
         }
 
         const data = await response.json();
-        return data.message.content;
+        return data.response;
     }
 };
