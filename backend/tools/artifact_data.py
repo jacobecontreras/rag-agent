@@ -1,11 +1,16 @@
+import logging
 from typing import Dict, Any
 from database.database import get_db_cursor
+
+logger = logging.getLogger(__name__)
 
 
 def artifact_data(input_data: Dict[str, Any]) -> Dict[str, Any]:
     job_name = input_data.get("job_name")
     artifact_type_id = input_data.get("artifact_type_id")
     limit = input_data.get("limit", 100)
+
+    logger.info(f"Fetching artifact data: job_name='{job_name}', artifact_type_id={artifact_type_id}, limit={limit}")
 
     try:
         with get_db_cursor() as cursor:
@@ -22,6 +27,7 @@ def artifact_data(input_data: Dict[str, Any]) -> Dict[str, Any]:
                 LIMIT ?
                 """
                 params = [job_name] + artifact_type_id + [limit]
+                logger.info(f"Querying multiple artifact types: {artifact_type_id}")
             else:
                 # Single ID (backward compatibility)
                 query = """
@@ -33,6 +39,7 @@ def artifact_data(input_data: Dict[str, Any]) -> Dict[str, Any]:
                 LIMIT ?
                 """
                 params = (job_name, artifact_type_id, limit)
+                logger.info(f"Querying single artifact type: {artifact_type_id}")
 
             cursor.execute(query, params)
             rows = cursor.fetchall()
@@ -45,12 +52,14 @@ def artifact_data(input_data: Dict[str, Any]) -> Dict[str, Any]:
                     "file_name": row[2]
                 })
 
+            logger.info(f"Successfully retrieved {len(data)} artifact data rows for job '{job_name}'")
             return {
                 "success": True,
                 "data": data,
                 "count": len(data)
             }
     except Exception as e:
+        logger.error(f"Failed to fetch artifact data for job '{job_name}', artifact_type_id={artifact_type_id}: {str(e)}")
         return {
             "success": False,
             "error": str(e)

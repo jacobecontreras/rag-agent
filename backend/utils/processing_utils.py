@@ -1,49 +1,61 @@
 import os
+import logging
+import time
 from parsers.tsv_parser import parse_tsv_directory
 from parsers.leapp_db_parser import parse_spatial_db, parse_timeline_db
 from database.database import update_report_status, store_tsv_data, store_spatial_data, store_timeline_data
 from utils.embedding_utils import embed_job_data
 
-# Ensures the chosen directory contains the correct directory names
-def validate_leapp_directory(directory_path: str) -> bool:
-    """Validate LEAPP directory structure"""
-    required_dirs = ['_TSV Exports', '_KML Exports', '_Timeline']
+logger = logging.getLogger(__name__)
 
+# Required subdirectories in LEAPP reports
+REQUIRED_DIRS = ['_TSV Exports', '_KML Exports', '_Timeline']
+
+
+def validate_leapp_directory(directory_path: str) -> bool:
+    """Validate LEAPP directory structure by checking required subdirectories"""
     if not os.path.exists(directory_path):
         return False
 
-    for dir_name in required_dirs:
-        if not os.path.exists(os.path.join(directory_path, dir_name)):
-            return False
+    return all(
+        os.path.exists(os.path.join(directory_path, dir_name))
+        for dir_name in REQUIRED_DIRS
+    )
 
-    return True
-
-# Parse and store data from directories
 def process_leapp_report(job_name: str, directory_path: str):
-    """Main processing pipeline"""
+    """Main processing pipeline for LEAPP forensic reports"""
+    start_time = time.time()
+    logger.info(f"Starting processing for job: {job_name}")
+
     try:
         update_report_status(job_name, "processing")
 
-        # Parse TSV files
-        tsv_data = parse_tsv_directory(os.path.join(directory_path, '_TSV Exports'))
+        # Process TSV exports and store data in SQLite
+        logger.info(f"Processing TSV files for job: {job_name}")
+        tsv_path = os.path.join(directory_path, '_TSV Exports')
+        tsv_data = parse_tsv_directory(tsv_path)
         store_tsv_data(job_name, tsv_data)
 
-        # Parse spatial data
+        # Process spatial data and store data and store data in SQLite
+        logger.info(f"Processing spatial data for job: {job_name}")
         spatial_path = os.path.join(directory_path, '_KML Exports', '_latlong.db')
-        if os.path.exists(spatial_path):
-            spatial_data = parse_spatial_db(spatial_path)
-            store_spatial_data(job_name, spatial_data)
+        spatial_data = parse_spatial_db(spatial_path)
+        store_spatial_data(job_name, spatial_data)
 
-        # Parse timeline data
+        # Process timeline data and store data and store data in SQLite
+        logger.info(f"Processing timeline data for job: {job_name}")
         timeline_path = os.path.join(directory_path, '_Timeline', 'tl.db')
-        if os.path.exists(timeline_path):
-            timeline_data = parse_timeline_db(timeline_path)
-            store_timeline_data(job_name, timeline_data)
+        timeline_data = parse_timeline_db(timeline_path)
+        store_timeline_data(job_name, timeline_data)
 
+        # Mark as completed and start embedding
         update_report_status(job_name, "completed")
-
-        # Start embedding process
+        logger.info(f"Starting embedding for job: {job_name}")
         embed_job_data(job_name)
 
+        processing_time = time.time() - start_time
+        logger.info(f"Completed processing for job: {job_name} in {processing_time:.2f} seconds")
+
     except Exception as e:
+        logger.error(f"Failed to process job {job_name}: {str(e)}")
         update_report_status(job_name, "failed", str(e))

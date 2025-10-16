@@ -1,7 +1,14 @@
 import os
 import chromadb
+import logging
 from typing import List, Dict, Any, Optional
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+
+COLLECTION_NAME = "artifact_chunks"
+BATCH_SIZE = 100
+DEFAULT_MODEL = "all-MiniLM-L6-v2"
+
+logger = logging.getLogger(__name__)
 
 
 class ChromaService:
@@ -16,15 +23,15 @@ class ChromaService:
         # Initialize ChromaDB client
         self.client = chromadb.PersistentClient(path=persist_directory)
 
-        # Initialize embedding function with MPS GPU support
+        # Initialize embedding function with MPS GPU support 
         self.embedding_function = SentenceTransformerEmbeddingFunction(
-            model_name='all-MiniLM-L6-v2',
+            model_name=DEFAULT_MODEL,
             device='mps'
         )
 
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
-            name="artifact_chunks",
+            name=COLLECTION_NAME,
             embedding_function=self.embedding_function,
             metadata={"description": "LEAPP forensic report artifact chunks"}
         )
@@ -59,19 +66,12 @@ class ChromaService:
                 ids.append(chunk_id)
 
             # Add to collection in batches to avoid memory issues
-            batch_size = 100
-            total_chunks = len(documents)
-
-            for i in range(0, total_chunks, batch_size):
-                batch_end = min(i + batch_size, total_chunks)
-                batch_docs = documents[i:batch_end]
-                batch_metadata = metadatas[i:batch_end]
-                batch_ids = ids[i:batch_end]
-
+            for i in range(0, len(documents), BATCH_SIZE):
+                batch_end = min(i + BATCH_SIZE, len(documents))
                 self.collection.add(
-                    documents=batch_docs,
-                    metadatas=batch_metadata,
-                    ids=batch_ids
+                    documents=documents[i:batch_end],
+                    metadatas=metadatas[i:batch_end],
+                    ids=ids[i:batch_end]
                 )
 
             return True
@@ -91,21 +91,27 @@ class ChromaService:
                 where=where_clause
             )
 
-            # Format results
-            formatted_results = []
-            if results['documents'] and results['documents'][0]:
-                for i, doc in enumerate(results['documents'][0]):
-                    formatted_results.append({
-                        'document': doc,
-                        'metadata': results['metadatas'][0][i] if results['metadatas'] and results['metadatas'][0] else {},
-                        'distance': results['distances'][0][i] if results['distances'] and results['distances'][0] else 0,
-                        'id': results['ids'][0][i] if results['ids'] and results['ids'][0] else ''
-                    })
+            # Format results safely
+            if not results['documents'] or not results['documents'][0]:
+                return []
 
-            return formatted_results
+            docs = results['documents'][0]
+            metadatas = results['metadatas'][0] if results['metadatas'] else [{}] * len(docs)
+            distances = results['distances'][0] if results['distances'] else [0] * len(docs)
+            ids = results['ids'][0] if results['ids'] else [''] * len(docs)
+
+            return [
+                {
+                    'document': doc,
+                    'metadata': metadatas[i] if i < len(metadatas) else {},
+                    'distance': distances[i] if i < len(distances) else 0,
+                    'id': ids[i] if i < len(ids) else ''
+                }
+                for i, doc in enumerate(docs)
+            ]
 
         except Exception as e:
-            print(f"Error querying chunks: {str(e)}")
+            logger.error(f"Error querying chunks: {str(e)}")
             return []
 
 # Global instance

@@ -3,14 +3,14 @@ from typing import List, Dict, Any
 from services.chroma_service import chroma_service
 from database.database import get_db_cursor
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+# Create chunks for a specific report (each chunk represents one row from artifact_data)
 def get_artifact_chunks(job_name: str) -> List[Dict[str, Any]]:
     """Retrieve all artifact data rows for a specific job"""
     try:
         with get_db_cursor() as cursor:
+            # Query artifact data with file names
             query = """
             SELECT
                 ad.job_name,
@@ -26,6 +26,7 @@ def get_artifact_chunks(job_name: str) -> List[Dict[str, Any]]:
             cursor.execute(query, (job_name,))
             rows = cursor.fetchall()
 
+            # Convert rows to dictionaries
             return [
                 {
                     'job_name': row[0],
@@ -41,17 +42,21 @@ def get_artifact_chunks(job_name: str) -> List[Dict[str, Any]]:
         logger.error(f"Error retrieving artifact data for {job_name}: {e}")
         return []
 
-
+# Embed chunks using ChromaDB
 def embed_job_data(job_name: str) -> bool:
-    """Embed all artifact data for a job"""
+    """Embed all artifact data for a job using Chroma service"""
     chunks = get_artifact_chunks(job_name)
 
+    # Return early if no data found
     if not chunks:
         logger.info(f"No artifact data found for job: {job_name}")
         return False
 
     try:
+        # Delegate embedding to Chroma service
         success = chroma_service.embed_and_store_chunks(job_name, chunks)
+
+        # Log result
         if success:
             logger.info(f"Successfully embedded data for job: {job_name}")
         else:

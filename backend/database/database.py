@@ -1,10 +1,14 @@
 import os
 import json
 import sqlite3
+import logging
 from typing import List, Dict, Any
 from contextlib import contextmanager
 
-# Database setup and utility functions
+DB_NAME = "leapp_forensics.db"
+DEFAULT_STATUS = "processing"
+
+logger = logging.getLogger(__name__)
 
 def init_database():
     # Create database file in same directory as this script
@@ -81,7 +85,7 @@ def init_database():
 
 def get_db_connection():
     """Get database connection"""
-    return sqlite3.connect(os.path.join(os.path.dirname(__file__), "leapp_forensics.db"))
+    return sqlite3.connect(os.path.join(os.path.dirname(__file__), DB_NAME))
 
 @contextmanager
 def get_db_cursor():
@@ -101,8 +105,8 @@ def insert_report_metadata(job_name: str, report_path: str):
     """Insert report metadata"""
     with get_db_cursor() as cursor:
         cursor.execute(
-            "INSERT INTO reports (job_name, report_path, status) VALUES (?, ?, 'processing')",
-            (job_name, report_path)
+            "INSERT INTO reports (job_name, report_path, status) VALUES (?, ?, ?)",
+            (job_name, report_path, DEFAULT_STATUS)
         )
 
 def update_report_status(job_name: str, status: str, error_message: str = None):
@@ -139,6 +143,8 @@ def store_tsv_data(job_name: str, tsv_data: Dict[str, List[Dict[str, Any]]]):
                     (job_name, artifact_type_id, row_index, json.dumps(row_data))
                 )
 
+        logger.info(f"Stored TSV data for job {job_name}: {len(tsv_data)} files")
+
 def store_spatial_data(job_name: str, spatial_data: List[Dict[str, Any]]):
     """Store spatial data in database"""
     with get_db_cursor() as cursor:
@@ -149,6 +155,8 @@ def store_spatial_data(job_name: str, spatial_data: List[Dict[str, Any]]):
                  data.get('activity'), data.get('source_artifact'))
             )
 
+        logger.info(f"Stored spatial data for job {job_name}: {len(spatial_data)} locations")
+
 def store_timeline_data(job_name: str, timeline_data: List[Dict[str, Any]]):
     """Store timeline data in database"""
     with get_db_cursor() as cursor:
@@ -158,3 +166,5 @@ def store_timeline_data(job_name: str, timeline_data: List[Dict[str, Any]]):
                 (job_name, event.get('key'), event.get('activity'), event.get('datalist'),
                  event.get('source_artifact'))
             )
+
+        logger.info(f"Stored timeline data for job {job_name}: {len(timeline_data)} events")
