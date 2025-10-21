@@ -1,80 +1,131 @@
-// Main Chat component, handles chat interface functionality
 const Chat = {
-    // For storing DOM element references
-    elements: {},
-
-    // Initialize chat component and cache DOM elements
     init() {
-        this.elements = {
-            chatMessages: document.getElementById('chatMessages'),
-            sendButton: document.getElementById('sendButton'),
-            uploadButton: document.getElementById('uploadButton'),
-            messageInput: document.getElementById('messageInput')
-        };
+        this.chatMessages = document.getElementById('chatMessages');
+        this.sendButton = document.getElementById('sendButton');
+        this.uploadButton = document.getElementById('uploadButton');
+        this.messageInput = document.getElementById('messageInput');
+        this.isStreaming = false;
+        this.currentResponse = null;
 
         this.setupEventListeners();
     },
 
-    // Set up event listeners for chat interactions
     setupEventListeners() {
-        const { sendButton, uploadButton } = this.elements;
+        // Listeners for send/stop message button
+        this.sendButton.addEventListener('click', () => {
+            this.isStreaming ? this.handleStopGeneration() : this.handleSendMessage();
+        });
 
-        // Handles click events on send message and upload report buttons
-        sendButton.addEventListener('click', () => this.handleSendMessage());
-        uploadButton.addEventListener('click', () => this.handleUploadReport());
+        // Listeners for upload report button
+        this.uploadButton.addEventListener('click', () => this.handleUploadReport());
 
-        // Handles Enter key for sending messages
         document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'messageInput') {
+            if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'messageInput' && !this.isStreaming) {
                 e.preventDefault();
                 this.handleSendMessage();
             }
         });
     },
 
-    // Add a message to the chat display
-    addMessage(messageCreator, text) {
-        const message = messageCreator(text);
-        this.elements.chatMessages.appendChild(message);
-        UIManager.scrollToBottom();
+    getInputValue() {
+        return this.messageInput.value;
     },
 
-    // Handle sending a user's message
+    clearInput() {
+        this.messageInput.value = '';
+        UIManager.autoResizeTextarea();
+    },
+
+    addUserMessage(text) {
+        this.chatMessages.appendChild(Message.createUserMessage(text));
+    },
+
     async handleSendMessage() {
-        const message = this.elements.messageInput.value.trim();
+        const message = this.getInputValue();
         if (!message) return;
 
-        this.addMessage(Message.createUserMessage, message);
+        this.addUserMessage(message);
         this.clearInput();
+        this.setStreamingState(true);
         await this.getAIResponse(message);
     },
 
-    // Handle report upload functionality
+    handleStopGeneration() {
+        if (this.currentResponse?.abort) {
+            this.currentResponse.abort();
+        }
+        this.clearStreamingState();
+        this.setStreamingState(false);
+    },
+
+    setStreamingState(isStreaming) {
+        this.isStreaming = isStreaming;
+        this.sendButton.classList.toggle('stop-button', isStreaming);
+    },
+
+    clearStreamingState() {
+        this.currentResponse = null;
+        this.chatMessages.querySelectorAll('.ai-message.streaming')
+            .forEach(msg => msg.classList.remove('streaming'));
+    },
+
     async handleUploadReport() {
         try {
             const selectResult = await UploadService.selectDirectory();
-            if (selectResult?.success) {
-                await UploadService.uploadReport(selectResult.directory_path);
-            }
+            if (!selectResult.success) return;
+
+            const uploadResult = await UploadService.uploadReport(selectResult.directory_path);
         } catch (error) {
             console.error('Upload failed:', error);
         }
     },
 
-    // Get AI response to user message
     async getAIResponse(message) {
+        const streamingMessage = Message.createStreamingMessage();
+        this.chatMessages.appendChild(streamingMessage);
+        UIManager.scrollToBottom();
+
+        let agentProcessText = '';
+        let finalAnswerText = '';
+
         try {
-            const aiResponse = await AIService.sendMessage(message);
-            this.addMessage(Message.createAIMessage, aiResponse);
+            const response = AIService.sendMessage(
+                message,
+                (responseChunk) => {
+                    if (responseChunk.type === 'agent_process') {
+                        agentProcessText += responseChunk.content;
+                        Message.updateStreamingMessageWithStructuredData(streamingMessage, agentProcessText, finalAnswerText);
+                    } else if (responseChunk.type === 'final_answer_partial') {
+                        finalAnswerText = responseChunk.content;
+                        Message.updateStreamingMessageWithStructuredData(streamingMessage, agentProcessText, finalAnswerText);
+                    } else if (responseChunk.type === 'final_answer') {
+                        finalAnswerText = responseChunk.content;
+                        Message.updateStreamingMessageWithStructuredData(streamingMessage, agentProcessText, finalAnswerText);
+                    }
+
+                    if (UIManager.shouldAutoScroll()) {
+                        UIManager.scrollToBottom();
+                    }
+                },
+                () => {
+                    Message.updateStreamingMessageWithStructuredData(streamingMessage, agentProcessText, finalAnswerText);
+                    this.clearStreamingState();
+                    this.setStreamingState(false);
+                },
+                (error) => {
+                    Message.setErrorMessage(streamingMessage, error);
+                    this.clearStreamingState();
+                    this.setStreamingState(false);
+                }
+            );
+
+            this.currentResponse = response;
+            await response.promise;
         } catch (error) {
             console.error('Error in getAIResponse:', error);
-            this.addMessage(Message.createErrorMessage, 'Sorry, there was an error processing your request.');
+            Message.setErrorMessage(streamingMessage, 'Sorry, there was an error processing your request.');
+            this.clearStreamingState();
+            this.setStreamingState(false);
         }
-    },
-
-    // Clear message input and resize textarea
-    clearInput() {
-        this.elements.messageInput.value = '';
-        UIManager.autoResizeTextarea();
     }
 };

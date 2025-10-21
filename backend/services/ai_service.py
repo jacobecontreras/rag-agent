@@ -1,72 +1,90 @@
-import logging
-import requests
 import os
-from typing import Dict, Any, Optional
+import json
+import httpx
+from typing import AsyncGenerator
+from fastapi import HTTPException
 from dotenv import load_dotenv
 
 load_dotenv()
-logger = logging.getLogger(__name__)
-
-# Configuration for Ollama API
-OLLAMA_CONFIG = {
-    "url": os.getenv("OLLAMA_URL", "http://localhost:11434/api/chat"),
-    "model": os.getenv("OLLAMA_MODEL", "gpt-oss:20b"),
-    "system_prompt": "You are a LEAPP forensic analysis assistant. You specialize in analyzing aLEAPP and iLEAPP reports. Help users analyze forensic data and answer questions about your LEAPP reports."
-}
-
 
 class AIService:
-    """Service for handling Ollama API calls"""
-
     def __init__(self):
-        self.config = OLLAMA_CONFIG
+        self.api_key = os.getenv("ZAI_API_KEY")
+        self.base_url = "https://api.z.ai/api/paas/v4/chat/completions"
+        self.model = "glm-4.6"
 
-    async def send_message(self, message: str) -> str:
-        """Send a message to Ollama API and get a response"""
-        try:
-            logger.info(f"Sending message to Ollama: {message[:100]}...")
+        if not self.api_key:
+            raise ValueError("AI service not configured properly: ZAI_API_KEY environment variable is missing")
 
-            payload = {
-                "model": self.config["model"],
-                "messages": [
-                    {"role": "system", "content": self.config["system_prompt"]},
-                    {"role": "user", "content": message}
-                ],
-                "stream": False
-            }
+    async def chat_stream_with_context(self, input_data) -> AsyncGenerator[str, None]:
+        """Send messages to AI and stream response tokens in real-time
 
-            response = requests.post(
-                self.config["url"],
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=30  # 30 second timeout
-            )
+        Args:
+            input_data: Either a single message string or list of message dictionaries with conversation context
+        """
+        # Handle both single message and message list with smart type detection
+        if isinstance(input_data, list):
+            messages = input_data
+        elif isinstance(input_data, str):
+            messages = [{"role": "user", "content": input_data}]
+        else:
+            raise ValueError("input_data must be either a string or list of message dictionaries")
 
-            if not response.ok:
-                error_msg = f"Ollama API error! status: {response.status_code}, response: {response.text}"
-                logger.error(error_msg)
-                raise Exception(error_msg)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "text/event-stream",
+        }
 
-            data = response.json()
-            ai_response = data.get("message", {}).get("content", "")
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": True
+        }
 
-            logger.info(f"Received AI response: {ai_response[:100]}...")
-            return ai_response
+        async with httpx.AsyncClient(timeout=300.0) as client:
+            try:
+                async with client.stream(
+                    "POST",
+                    self.base_url,
+                    headers=headers,
+                    json=payload
+                ) as response:
 
-        except requests.exceptions.Timeout:
-            error_msg = "Ollama API request timed out after 30 seconds"
-            logger.error(error_msg)
-            raise Exception(error_msg)
+                    if response.status_code != 200:
+                        error_text = await response.aread()
+                        raise HTTPException(
+                            status_code=response.status_code,
+                            detail=f"AI service error: {error_text.decode()}"
+                        )
 
-        except requests.exceptions.ConnectionError:
-            error_msg = "Failed to connect to Ollama API. Is Ollama running?"
-            logger.error(error_msg)
-            raise Exception(error_msg)
+                    buffer = ""
+                    async for chunk in response.aiter_text():
+                        buffer += chunk
+                        lines = buffer.split('\n')
+                        buffer = lines.pop() or ""
 
-        except Exception as e:
-            error_msg = f"Error in AI service: {str(e)}"
-            logger.error(error_msg)
-            raise Exception(error_msg)
+                        for line in lines:
+                            if not line.startswith('data: '):
+                                continue
+
+                            data = line[6:].strip()
+                            if data == '[DONE]':
+                                return
+
+                            try:
+                                parsed = json.loads(data)
+                                content = parsed['choices'][0].get('delta', {}).get('content') if parsed['choices'] else None
+                                if content:
+                                    yield content
+                            except json.JSONDecodeError:
+                                continue
+
+            except httpx.RequestError as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to connect to AI service: {str(e)}"
+                )
 
 
 # Global instance

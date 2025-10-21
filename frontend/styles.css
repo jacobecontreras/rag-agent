@@ -140,7 +140,7 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     padding-top: 20px;
-    padding-bottom: 20px
+    padding-bottom: 20px;
 }
 
 .message-content td {
@@ -216,21 +216,40 @@ body {
 
 .send-button {
     border: none;
+    padding: 0;
+    background: #ececec;
+    color: var(--text-primary);
+    border-radius: 50%;
     width: 40px;
     height: 40px;
     display: flex;
-    border-radius: 50%;
     align-items: center;
-    background: var(--text-primary);
+    justify-content: center;
 }
 
-.send-button:hover {
+.send-button:hover,
+.send-button.stop-button:hover {
     opacity: .7;
 }
 
 .send-icon {
     width: 30px;
     height: 20px;
+}
+
+.stop-icon {
+    width: 24px;
+    height: 24px;
+    color: #000;
+    display: none;
+}
+
+.send-button.stop-button .send-icon {
+    display: none;
+}
+
+.send-button.stop-button .stop-icon {
+    display: block;
 }
 
 /* Upload Button */
@@ -253,6 +272,57 @@ body {
     vertical-align: middle;
     filter: brightness(0) invert(1);
 }
+
+/* Streaming and Agent Process Styles */
+
+.ai-message.streaming .message-content::after {
+    content: 'Thinking...';
+    color: var(--text-secondary);
+}
+
+/* Agent Process Container */
+
+.agent-process-toggle {
+    border: none;
+    padding: 8px 0;
+    font-size: 14px;
+    color: #747474;
+    text-align: left;
+    background: transparent;
+}
+
+.agent-process-toggle:hover {
+    color: #555;
+}
+
+.agent-process-content {
+    padding: 0px;
+    max-height: none;
+    overflow: visible;
+    margin: 20px 0 20px 0;
+    color: #747474;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-family: 'Monaco', monospace;
+}
+
+.action-text {
+    background: var(--code-block-background);
+    font-weight: bold;
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: var(--border-radius);
+}
+
+.agent-process-container:not(.expanded) .agent-process-content {
+    max-height: 0;
+    overflow: hidden;
+    margin: 0;
+}
+
+
 
 /* Disclaimer Message */
 
