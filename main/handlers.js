@@ -6,7 +6,7 @@ function registerHandlers(mainWindow) {
   ipcMain.handle('select-directory', async () => {
 
     if (!mainWindow) {
-      return { success: false, error: 'No main window available' };
+      return JSON.stringify({ success: false, error: 'No main window available' });
     }
 
     try {
@@ -16,13 +16,13 @@ function registerHandlers(mainWindow) {
       });
 
       if (result.canceled) {
-        return { success: false, error: 'User cancelled directory selection' };
+        return JSON.stringify({ success: false, error: 'User cancelled directory selection' });
       } else {
-        return { success: true, directory_path: result.filePaths[0] };
+        return JSON.stringify({ success: true, directory_path: result.filePaths[0] });
       }
     } catch (error) {
       console.error('Directory selection error:', error);
-      return { success: false, error: error.message };
+      return JSON.stringify({ success: false, error: error.message });
     }
   });
 }
