@@ -4,9 +4,10 @@
   "description": "aLEAPP/iLEAPP AI Powered Report Analyzer - Desktop App",
   "main": "main/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron .",
-    "electron": "electron ."
+    "start": "NODE_ENV=production electron .",
+    "dev": "NODE_ENV=development electron .",
+    "electron": "electron .",
+    "dev-debug": "NODE_ENV=development electron . --inspect=5858"
   },
   "keywords": [
     "electron",
@@ -19,6 +20,7 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "electron": "^38.1.2"
+    "electron": "^38.1.2",
+    "electron-reload": "^2.0.0-alpha.1"
   }
 }
