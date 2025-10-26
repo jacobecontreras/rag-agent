@@ -107,6 +107,13 @@ class AgentService:
                     "content": "\n"
                 })
 
+            # Strategic format reinforcement every 3rd iteration to prevent context dilution
+            if iteration % 3 == 1 and iteration > 1:
+                chat_history.append({
+                    "role": "system",
+                    "content": "REMEMBER: JSON format only - {'thought': '...', 'action': {...}} or {'thought': '...', 'finish': '...'}"
+                })
+
             # Process AI stream
             accumulated_response = ""
             finish_found = False
