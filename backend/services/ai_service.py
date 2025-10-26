@@ -9,12 +9,12 @@ load_dotenv()
 
 class AIService:
     def __init__(self):
-        self.api_key = os.getenv("ZAI_API_KEY")
-        self.base_url = "https://api.z.ai/api/paas/v4/chat/completions"
-        self.model = "glm-4.6"
+        self.api_key = os.getenv("OPENROUTER_API_KEY")
+        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+        self.model = "z-ai/glm-4.6"
 
         if not self.api_key:
-            raise ValueError("AI service not configured properly: ZAI_API_KEY environment variable is missing")
+            raise ValueError("AI service not configured properly: OPENROUTER_API_KEY environment variable is missing")
 
     async def chat_stream_with_context(self, input_data) -> AsyncGenerator[str, None]:
         """Send messages to AI and stream response tokens in real-time
@@ -34,6 +34,8 @@ class AIService:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
             "Accept": "text/event-stream",
+            "HTTP-Referer": "https://capstone.forensics",
+            "X-Title": "CAPSTONE Forensics",
         }
 
         payload = {
