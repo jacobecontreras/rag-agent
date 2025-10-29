@@ -1,4 +1,5 @@
 // Entry point for the Electron main process
+const path = require('path');
 const { app, BrowserWindow } = require('electron');
 const { startBackend, stopBackend } = require('./backend');
 const { registerHandlers, unregisterHandlers } = require('./handlers');
@@ -10,10 +11,13 @@ if (process.env.NODE_ENV === 'development') {
 
   try {
     // Electron-reload setup
-    require('electron-reload')(__dirname, {
+    require('electron-reload')([
+      __dirname,  // Watch main process files
+      path.join(__dirname, '..', 'frontend')  // Watch frontend files
+    ], {
       hardResetMethod: 'exit'
     });
-    console.log('Hot reload enabled for main process');
+    console.log('Hot reload enabled for main process and frontend');
   } catch (err) {
     console.log('electron-reload setup failed:', err.message);
     console.log('Backend hot reload still works automatically');

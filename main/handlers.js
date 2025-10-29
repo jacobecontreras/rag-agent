@@ -12,7 +12,7 @@ function registerHandlers(mainWindow) {
     try {
       const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory'],
-        title: 'Select LEAPP Report Directory'
+        title: 'Select Directory'
       });
 
       if (result.canceled) {
