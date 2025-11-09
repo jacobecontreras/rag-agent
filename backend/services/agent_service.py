@@ -1,10 +1,13 @@
 import json
+import logging
 from tools import execute_tool
 from typing import AsyncGenerator
 from services.ai_service import ai_service
 from services.session_manager import session_manager
 from services.system_prompt import SYSTEM_PROMPT
 from utils.stream_utils import parse_stream_token
+
+logger = logging.getLogger(__name__)
 
 
 class AgentService:
@@ -34,6 +37,9 @@ class AgentService:
         finish_buffer = ""
         streamed_fields = set()
 
+        # Initialize result to prevent UnboundLocalError
+        result = None
+
         async for token in ai_service.chat_stream_with_context(chat_history):
             result = parse_stream_token(token, accumulated, finish_buffer, streamed_fields)
 
@@ -50,7 +56,21 @@ class AgentService:
             if result.is_complete:
                 break
 
-        # Return final results
+        # Return final results with fallback if no result was ever created
+        if result is None:
+            # Handle empty stream case, no tokens were received
+            logger.warning("AI stream returned no tokens, using empty response")
+            result = StreamResult(
+                outputs=[],
+                accumulated="",
+                finish_buffer="",
+                streamed_fields=set(),
+                is_complete=True,
+                final_answer="I apologize, but I couldn't generate a response. Please try again."
+            )
+            accumulated = ""
+            streamed_fields = set()
+
         action_streamed = "action" in streamed_fields
         yield accumulated, result.is_complete, action_streamed, result.final_answer
 
@@ -75,16 +95,39 @@ class AgentService:
             tool_result = execute_tool(tool_name, tool_input)
             tool_results_used.append(tool_result)
 
-            # Add tool result to chat
-            chat_history.append({
-                "role": "assistant",
-                "content": accumulated_response
-            })
-            chat_history.append({
-                "role": "user",
-                "content": f"Tool result: {json.dumps(tool_result)}"
-            })
-        except Exception:
+            # Check if tool execution failed due to non-existent tool
+            if not tool_result.get("success") and "not found" in tool_result.get("error", ""):
+                error_type = tool_result.get("error_type")
+                if error_type in ["report_not_found", "artifact_not_found"]:
+                    # Use educational feedback directly
+                    enhanced_error_message = tool_result.get("error")
+                else:
+                    # Handle generic "not found" errors
+                    from tools import TOOLS
+                    available_tools = list(TOOLS.keys())
+                    enhanced_error_message = f"Tool '{tool_name}' does not exist. Available tools are: {', '.join(available_tools)}. Please use one of the available tools or provide your final answer in the Final format."
+
+                # Add the original response and enhanced error message to chat
+                chat_history.append({
+                    "role": "assistant",
+                    "content": accumulated_response
+                })
+                chat_history.append({
+                    "role": "user",
+                    "content": f"Error: {enhanced_error_message}"
+                })
+            else:
+                # Add normal tool result to chat
+                chat_history.append({
+                    "role": "assistant",
+                    "content": accumulated_response
+                })
+                chat_history.append({
+                    "role": "user",
+                    "content": f"Tool result: {json.dumps(tool_result)}"
+                })
+        except Exception as e:
+            # Handle other errors silently to avoid disrupting the flow
             pass
 
     async def process_agent_message(self, prompt: str, session_id: str, job_name: str = None) -> AsyncGenerator[str, None]:
@@ -94,7 +137,7 @@ class AgentService:
         chat_history = self._setup_chat_history(prompt, session_id)
 
         iteration = 0
-        max_iterations = 15 # Arbitrary for now
+        max_iterations = 25 # Arbitrary for now
         tool_results_used = []
 
         while iteration < max_iterations:
@@ -107,11 +150,11 @@ class AgentService:
                     "content": "\n"
                 })
 
-            # Strategic format reinforcement every 3rd iteration to prevent context dilution
-            if iteration % 3 == 1 and iteration > 1:
+            # Format reinforcement every iteration to prevent context dilution
+            if iteration > 3:
                 chat_history.append({
                     "role": "system",
-                    "content": "REMEMBER: JSON format only - {'thought': '...', 'action': {...}} or {'thought': '...', 'finish': '...'}"
+                    "content": "REMEMBER: JSON format only - {'thought': '...', 'action': {...}} or {'thought': '...', 'finish': '...'}. CRITICAL: NEVER use 'finish' as an action name in Tools format!"
                 })
 
             # Process AI stream
