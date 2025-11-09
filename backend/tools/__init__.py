@@ -3,6 +3,7 @@ from .semantic_search import semantic_search
 from .artifact_list import artifact_list
 from .artifact_data import artifact_data
 from .report_list import report_list
+from .grep_search import grep_search
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +11,8 @@ TOOLS = {
     "semanticSearch": semantic_search,
     "viewArtifactList": artifact_list,
     "viewArtifactData": artifact_data,
-    "viewReportList": report_list
+    "viewReportList": report_list,
+    "grepSearch": grep_search
 }
 
 def execute_tool(name: str, input_data: dict):
