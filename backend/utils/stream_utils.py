@@ -1,5 +1,6 @@
 import json
 from typing import List, NamedTuple
+from tools import TOOLS
 
 
 class StreamResult(NamedTuple):
@@ -40,10 +41,12 @@ def parse_stream_token(token: str, accumulated: str, finish_buffer: str,
             input_data = action_data.get("input", {})
             input_display = str(input_data) if input_data else "{}"
 
-            outputs.append(json.dumps({
-                "type": "agent_process",
-                "content": f"→ {action_name}({input_display})\n"
-            }))
+            # Don't stream invalid tool calls, these are handled silently by error handling
+            if action_name in TOOLS:
+                outputs.append(json.dumps({
+                    "type": "agent_process",
+                    "content": f"→ {action_name}({input_display})\n"
+                }))
             streamed_fields.add("action")
 
     except json.JSONDecodeError:
