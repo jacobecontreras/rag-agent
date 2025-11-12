@@ -137,7 +137,7 @@ class AgentService:
         chat_history = self._setup_chat_history(prompt, session_id)
 
         iteration = 0
-        max_iterations = 25 # Arbitrary for now
+        max_iterations = 50 # Arbitrary for now
         tool_results_used = []
 
         while iteration < max_iterations:
