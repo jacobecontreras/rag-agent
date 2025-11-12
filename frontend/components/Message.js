@@ -42,7 +42,13 @@ const Message = {
 
             processContainer.appendChild(toggleButton);
             processContainer.appendChild(processContent);
-            messageContent.appendChild(processContainer);
+
+            // Insert agent process container before final answer container to maintain proper order
+            if (answerContainer) {
+                messageContent.insertBefore(processContainer, answerContainer);
+            } else {
+                messageContent.appendChild(processContainer);
+            }
         } else if (agentProcessText && processContainer) {
             // Update existing agent process content
             const processContent = processContainer.querySelector('.agent-process-content');
