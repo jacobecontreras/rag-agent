@@ -93,6 +93,19 @@ def init_database():
     conn.commit()
     conn.close()
 
+def reset_database():
+    """Reset the database by dropping all tables except ai_settings"""
+    with get_db_cursor() as cursor:
+        # List of tables to drop
+        tables = ['reports', 'artifact_types', 'artifact_data', 'spatial_data', 'timeline_events']
+        
+        for table in tables:
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
+            
+    # Re-initialize the database to recreate empty tables
+    init_database()
+    logger.info("Database reset successfully")
+
 def get_db_connection():
     """Get database connection"""
     return sqlite3.connect(os.path.join(os.path.dirname(__file__), DB_NAME))

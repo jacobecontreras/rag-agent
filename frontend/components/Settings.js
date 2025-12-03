@@ -5,6 +5,8 @@ class Settings {
         this.newRuleInput = document.getElementById('newRuleInput');
         this.addRuleBtn = document.getElementById('addRuleBtn');
         this.rulesList = document.getElementById('rulesList');
+        this.disableEmbeddingToggle = document.getElementById('disableEmbeddingToggle');
+        this.clearDataBtn = document.getElementById('clearDataBtn');
         this.rules = [];
         this.apiBase = 'http://localhost:8000';
 
@@ -45,6 +47,16 @@ class Settings {
                 e.preventDefault();
                 this.addRule();
             }
+        });
+
+        // Disable embedding toggle
+        this.disableEmbeddingToggle?.addEventListener('change', () => {
+            this.saveDisableEmbedding();
+        });
+
+        // Clear data button
+        this.clearDataBtn?.addEventListener('click', () => {
+            this.clearData();
         });
 
         // Rules list event delegation
@@ -105,6 +117,46 @@ class Settings {
 
         if (!response.ok) {
             throw new Error('Failed to save model to database');
+        }
+    }
+
+    async saveDisableEmbedding() {
+        const disable = this.disableEmbeddingToggle.checked;
+
+        const response = await fetch(`${this.apiBase}/settings`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ disable_embedding: disable })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save embedding setting');
+        }
+    }
+
+    async clearData() {
+        if (!confirm('Are you sure you want to delete ALL processed reports and embeddings? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${this.apiBase}/settings/clear-data`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to clear data');
+            }
+
+            const result = await response.json();
+            alert(result.message);
+
+            // Optional: Reload page to clear any cached state
+            window.location.reload();
+        } catch (error) {
+            alert(`Error: ${error.message}`);
         }
     }
 
@@ -239,6 +291,11 @@ class Settings {
         // Load selected model
         if (settings.model && this.modelSelect) {
             this.modelSelect.value = settings.model;
+        }
+
+        // Load disable embedding setting
+        if (this.disableEmbeddingToggle) {
+            this.disableEmbeddingToggle.checked = settings.disable_embedding || false;
         }
 
         // Load rules

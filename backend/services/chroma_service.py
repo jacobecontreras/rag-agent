@@ -79,6 +79,20 @@ class ChromaService:
         except Exception as e:
             return False
 
+    def reset_collection(self) -> bool:
+        """Reset the ChromaDB collection"""
+        try:
+            self.client.delete_collection(COLLECTION_NAME)
+            self.collection = self.client.get_or_create_collection(
+                name=COLLECTION_NAME,
+                embedding_function=self.embedding_function,
+                metadata={"description": "LEAPP forensic report artifact chunks"}
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to reset collection: {e}")
+            return False
+
     def query_chunks(self, query_text: str, job_name: Optional[str] = None, n_results: int = 10) -> List[Dict[str, Any]]:
         """Query chunks from ChromaDB"""
         try:

@@ -10,6 +10,8 @@ from fastapi.responses import StreamingResponse
 from database.database import init_database, insert_report_metadata
 from utils.processing_utils import validate_leapp_directory, process_leapp_report
 from services.settings_service import settings_service
+from services.chroma_service import chroma_service
+from database.database import init_database, insert_report_metadata, reset_database
 
 load_dotenv()
 app = FastAPI()
@@ -28,6 +30,7 @@ class SettingsRequest(BaseModel):
     api_key: Optional[str] = None
     model: Optional[str] = None
     rules: Optional[list] = None
+    disable_embedding: Optional[bool] = None
 
 @app.post("/upload")
 async def upload_report(request: UploadRequest):
@@ -107,6 +110,17 @@ async def update_settings(request: SettingsRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update settings: {str(e)}")
+
+
+@app.post("/settings/clear-data")
+async def clear_data():
+    """Clear all report data and embeddings"""
+    try:
+        reset_database()
+        chroma_service.reset_collection()
+        return {"success": True, "message": "All data cleared successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear data: {str(e)}")
 
 
 @app.get("/")

@@ -5,6 +5,7 @@ from parsers.tsv_parser import parse_tsv_directory
 from parsers.leapp_db_parser import parse_spatial_db, parse_timeline_db
 from database.database import update_report_status, store_tsv_data, store_spatial_data, store_timeline_data
 from utils.embedding_utils import embed_job_data
+from services.settings_service import settings_service
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,12 @@ def process_leapp_report(job_name: str, directory_path: str):
 
         # Mark as completed and start embedding
         update_report_status(job_name, "completed")
-        logger.info(f"Starting embedding for job: {job_name}")
-        embed_job_data(job_name)
+        
+        if not settings_service.get_disable_embedding():
+            logger.info(f"Starting embedding for job: {job_name}")
+            embed_job_data(job_name)
+        else:
+            logger.info(f"Skipping embedding for job: {job_name} (disabled in settings)")
 
         processing_time = time.time() - start_time
         logger.info(f"Completed processing for job: {job_name} in {processing_time:.2f} seconds")

@@ -15,7 +15,8 @@ class SettingsService:
         # Parse JSON fields
         result = {
             'api_key': settings.get('api_key', ''),
-            'model': settings.get('model', '')
+            'model': settings.get('model', ''),
+            'disable_embedding': settings.get('disable_embedding', 'false').lower() == 'true'
         }
 
         # Parse rules as JSON
@@ -45,6 +46,10 @@ class SettingsService:
             logger.error(f"Invalid JSON for rules in database: {rules_json}")
             return []
 
+    def get_disable_embedding(self) -> bool:
+        """Get the disable_embedding setting"""
+        return get_ai_setting('disable_embedding') == 'true'
+
     def set_api_key(self, api_key: str):
         """Set the API key"""
         set_ai_setting('api_key', api_key)
@@ -61,6 +66,11 @@ class SettingsService:
         set_ai_setting('rules', rules_json)
         logger.info(f"Rules updated: {len(rules)} rules stored")
 
+    def set_disable_embedding(self, disable: bool):
+        """Set the disable_embedding setting"""
+        set_ai_setting('disable_embedding', str(disable).lower())
+        logger.info(f"Disable embedding updated to: {disable}")
+
     def update_settings(self, settings: Dict[str, Any]) -> bool:
         """Update multiple settings at once"""
         try:
@@ -69,6 +79,9 @@ class SettingsService:
 
             if 'model' in settings:
                 self.set_model(settings['model'])
+
+            if 'disable_embedding' in settings:
+                self.set_disable_embedding(settings['disable_embedding'])
 
             if 'rules' in settings:
                 if isinstance(settings['rules'], list):

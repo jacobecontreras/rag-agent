@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>aiLEAPP</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -22,7 +24,7 @@
                     <img src="assets/kml-viewer-icon.svg" alt="KML Viewer" class="nav-icon">
                     <span class="nav-text">KML Viewer</span>
                 </a>
-                    <a href="#" class="nav-link" data-page="settings">
+                <a href="#" class="nav-link" data-page="settings">
                     <img src="assets/settings-icon.svg" alt="Settings" class="nav-icon">
                     <span class="nav-text">Settings</span>
                 </a>
@@ -32,59 +34,59 @@
         <!-- Main Content Area -->
         <main class="main-content">
             <!-- Agent Chat Page -->
-        <div id="agent-chat-page" class="page-content active">
-            <header class="app-header" id="chatHeader">
-            </header>
+            <div id="agent-chat-page" class="page-content active">
+                <header class="app-header" id="chatHeader">
+                </header>
 
-            <main class="chat-content" id="chatContent">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="chat-welcome" id="chatWelcome">
-                        <img src="assets/logo.png" alt="aLEAPP" class="chat-welcome-logo">
+                <main class="chat-content" id="chatContent">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-welcome" id="chatWelcome">
+                            <img src="assets/logo.png" alt="aLEAPP" class="chat-welcome-logo">
+                        </div>
                     </div>
-                </div>
 
-                <div class="chat-input">
-                    <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
-                    <div class="input-actions">
-                        <button id="uploadButton" class="upload-button" title="Upload report">
-                            <img src="assets/attachment.svg" alt="Upload" class="upload-icon">
-                            <span>Upload report</span>
-                        </button>
-                        <button id="sendButton" class="send-button">
-                        <img src="assets/send-arrow.svg" alt="Send" class="send-icon">
-                        <img src="assets/stop-icon.svg" alt="Stop" class="stop-icon">
+                    <div class="chat-input">
+                        <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+                        <div class="input-actions">
+                            <button id="uploadButton" class="upload-button" title="Upload report">
+                                <img src="assets/attachment.svg" alt="Upload" class="upload-icon">
+                                <span>Upload report</span>
+                            </button>
+                            <button id="sendButton" class="send-button">
+                                <img src="assets/send-arrow.svg" alt="Send" class="send-icon">
+                                <img src="assets/stop-icon.svg" alt="Stop" class="stop-icon">
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- KML Viewer Page -->
+            <div id="kml-viewer-page" class="page-content">
+                <!-- Search bar -->
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search for a location..." class="search-input">
+                    <button id="searchBtn" class="search-btn btn-icon">
+                        <img src="assets/search-icon.svg" alt="Search" class="btn-icon-img">
                     </button>
-                    </div>
                 </div>
-            </main>
-        </div>
 
-        <!-- KML Viewer Page -->
-        <div id="kml-viewer-page" class="page-content">
-            <!-- Search bar -->
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search for a location..." class="search-input">
-                <button id="searchBtn" class="search-btn btn-icon">
-                    <img src="assets/search-icon.svg" alt="Search" class="btn-icon-img">
-                </button>
-            </div>
+                <!-- Full-page map -->
+                <div id="map" class="map-fullscreen"></div>
 
-            <!-- Full-page map -->
-            <div id="map" class="map-fullscreen"></div>
+                <!-- Floating upload button -->
+                <div class="floating-upload-container">
+                    <button id="floatingUploadBtn" class="floating-upload-btn btn-icon" title="Upload KML files">
+                        <img src="assets/upload-icon.svg" alt="Upload" class="btn-icon-img">
+                    </button>
+                </div>
 
-            <!-- Floating upload button -->
-            <div class="floating-upload-container">
-                <button id="floatingUploadBtn" class="floating-upload-btn btn-icon" title="Upload KML files">
-                    <img src="assets/upload-icon.svg" alt="Upload" class="btn-icon-img">
-                </button>
-            </div>
-
-            <!-- Hidden file input -->
-            <input type="file" id="kmlFileInput" accept=".kml,.kmz" multiple style="display: none;">
+                <!-- Hidden file input -->
+                <input type="file" id="kmlFileInput" accept=".kml,.kmz" multiple style="display: none;">
 
             </div>
 
-  
+
             <!-- Settings Page -->
             <div id="settings-page" class="page-content">
                 <div class="settings-container">
@@ -98,8 +100,31 @@
                     <div class="tab-content">
                         <!-- General Tab -->
                         <div class="tab-pane active" data-tab="general">
-                            <div class="empty-state">
-                                <p>General settings coming soon...</p>
+                            <div class="settings-row">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Disable Embedding</span>
+                                        <span class="setting-description">Skip AI processing for faster report
+                                            loading</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="disableEmbeddingToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="settings-row-spacer"></div>
+
+                            <div class="settings-row">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Clear All Data</span>
+                                        <span class="setting-description">Delete all processed reports and
+                                            embeddings</span>
+                                    </div>
+                                    <button id="clearDataBtn" class="btn-danger">Clear Data</button>
+                                </div>
                             </div>
                         </div>
 
@@ -108,7 +133,8 @@
                             <div class="settings-row">
                                 <div class="input-group">
                                     <label for="apiKeyInput">API Key</label>
-                                    <input type="password" id="apiKeyInput" placeholder="Enter your API key..." class="api-input">
+                                    <input type="password" id="apiKeyInput" placeholder="Enter your API key..."
+                                        class="api-input">
                                 </div>
                                 <div class="input-group">
                                     <label for="modelSelect">Model</label>
@@ -125,7 +151,8 @@
                                 <div class="input-group full-width">
                                     <label for="newRuleInput">New Rule</label>
                                     <div class="rule-input-container">
-                                        <input type="text" id="newRuleInput" placeholder="Define an AI behavior rule..." class="rule-input-text">
+                                        <input type="text" id="newRuleInput" placeholder="Define an AI behavior rule..."
+                                            class="rule-input-text">
                                         <button id="addRuleBtn" class="add-rule-btn">
                                             <img src="assets/add-icon.svg" alt="Add" class="add-icon">
                                         </button>
@@ -163,4 +190,5 @@
     <script src="components/KMLViewer.js"></script>
     <script src="components/Settings.js"></script>
 </body>
+
 </html>
