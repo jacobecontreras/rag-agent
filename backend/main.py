@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from database.database import init_database, insert_report_metadata
 from utils.processing_utils import validate_leapp_directory, process_leapp_report
+from services.settings_service import settings_service
 
 load_dotenv()
 app = FastAPI()
@@ -22,6 +23,11 @@ class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     job_name: Optional[str] = None
+
+class SettingsRequest(BaseModel):
+    api_key: Optional[str] = None
+    model: Optional[str] = None
+    rules: Optional[list] = None
 
 @app.post("/upload")
 async def upload_report(request: UploadRequest):
@@ -64,6 +70,43 @@ async def chat_with_ai(request: ChatRequest):
             "Access-Control-Allow-Headers": "*"
         }
     )
+
+
+@app.get("/settings")
+async def get_settings():
+    """Get all AI settings"""
+    try:
+        settings = settings_service.get_all_settings()
+        return {"success": True, "settings": settings}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get settings: {str(e)}")
+
+
+@app.put("/settings")
+async def update_settings(request: SettingsRequest):
+    """Update AI settings"""
+    try:
+        # Convert request to dict and filter out None values
+        settings_to_update = {k: v for k, v in request.dict().items() if v is not None}
+
+        if not settings_to_update:
+            raise HTTPException(status_code=400, detail="No settings provided to update")
+
+        success = settings_service.update_settings(settings_to_update)
+
+        if not success:
+            raise HTTPException(status_code=400, detail="Failed to update settings")
+
+        # Refresh AI service with new settings
+        from services.ai_service import get_ai_service
+        ai_service = get_ai_service()
+        ai_service.refresh_settings()
+
+        return {"success": True, "message": "Settings updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update settings: {str(e)}")
 
 
 @app.get("/")

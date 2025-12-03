@@ -79,6 +79,16 @@ def init_database():
         )
     ''')
 
+    # AI settings for the application
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ai_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setting_key TEXT UNIQUE NOT NULL,       -- 'api_key', 'model', 'rules'
+            setting_value TEXT NOT NULL,            -- Setting value (JSON for rules)
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     # Save changes and close connection
     conn.commit()
     conn.close()
@@ -168,3 +178,26 @@ def store_timeline_data(job_name: str, timeline_data: List[Dict[str, Any]]):
             )
 
         logger.info(f"Stored timeline data for job {job_name}: {len(timeline_data)} events")
+
+# AI Settings Management Functions
+
+def get_ai_setting(setting_key: str) -> str:
+    """Get a specific AI setting value"""
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT setting_value FROM ai_settings WHERE setting_key = ?", (setting_key,))
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+def set_ai_setting(setting_key: str, setting_value: str):
+    """Set a specific AI setting value"""
+    with get_db_cursor() as cursor:
+        cursor.execute('''
+            INSERT OR REPLACE INTO ai_settings (setting_key, setting_value, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        ''', (setting_key, setting_value))
+
+def get_all_ai_settings() -> Dict[str, str]:
+    """Get all AI settings as a dictionary"""
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT setting_key, setting_value FROM ai_settings")
+        return {row[0]: row[1] for row in cursor.fetchall()}

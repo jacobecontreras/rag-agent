@@ -1,6 +1,7 @@
 const Chat = {
     init() {
         this.chatMessages = document.getElementById('chatMessages');
+        this.chatWelcome = document.getElementById('chatWelcome');
         this.sendButton = document.getElementById('sendButton');
         this.uploadButton = document.getElementById('uploadButton');
         this.messageInput = document.getElementById('messageInput');
@@ -36,7 +37,29 @@ const Chat = {
         UIManager.autoResizeTextarea();
     },
 
+    hideWelcome() {
+        if (this.chatWelcome && this.chatWelcome.style.display !== 'none') {
+            this.chatWelcome.style.display = 'none';
+        }
+    },
+
+    showWelcome() {
+        if (this.chatWelcome) {
+            this.chatWelcome.style.display = 'flex';
+        }
+    },
+
+    resetChat() {
+        this.chatMessages.innerHTML = `
+            <div class="chat-welcome" id="chatWelcome">
+                <img src="assets/logo.png" alt="aLEAPP" class="chat-welcome-logo">
+            </div>
+        `;
+        this.chatWelcome = document.getElementById('chatWelcome');
+    },
+
     addUserMessage(text) {
+        this.hideWelcome();
         this.chatMessages.appendChild(Message.createUserMessage(text));
     },
 
@@ -81,6 +104,7 @@ const Chat = {
     },
 
     async getAIResponse(message) {
+        this.hideWelcome();
         const streamingMessage = Message.createStreamingMessage();
         this.chatMessages.appendChild(streamingMessage);
         UIManager.scrollToBottom();

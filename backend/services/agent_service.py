@@ -2,10 +2,11 @@ import json
 import logging
 from tools import execute_tool
 from typing import AsyncGenerator
-from services.ai_service import ai_service
+from services.ai_service import get_ai_service
 from services.session_manager import session_manager
 from services.system_prompt import SYSTEM_PROMPT
-from utils.stream_utils import parse_stream_token
+from services.settings_service import settings_service
+from utils.stream_utils import parse_stream_token, StreamResult
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,10 @@ class AgentService:
 
     def _setup_chat_history(self, prompt: str, session_id: str) -> list:
         """Setup chat history with session context"""
-        # Add system prompt
-        chat_history = [{"role": "system", "content": self.system_prompt}]
+        # Build system prompt with user rules
+        system_prompt = self._build_system_prompt()
+
+        chat_history = [{"role": "system", "content": system_prompt}]
 
         # Add last three loops
         context_messages = session_manager.get_context_for_ai(session_id)
@@ -31,22 +34,45 @@ class AgentService:
 
         return chat_history
 
+    def _build_system_prompt(self) -> str:
+        """Build system prompt with base prompt plus user-defined rules"""
+        system_prompt = self.system_prompt
+
+        # Get user rules
+        user_rules = settings_service.get_rules()
+
+        if user_rules:
+            # Add user rules section
+            rules_text = "\n\nUSER-DEFINED RULES:\n"
+            for i, rule in enumerate(user_rules, 1):
+                if isinstance(rule, dict) and 'text' in rule:
+                    rules_text += f"{i}. {rule['text']}\n"
+                else:
+                    rules_text += f"{i}. {rule}\n"
+
+            system_prompt += rules_text
+
+        return system_prompt
+
     async def _process_ai_stream(self, chat_history: list) -> tuple:
         """Process AI response stream and return parsed results"""
         accumulated = ""
         finish_buffer = ""
         streamed_fields = set()
+        thought_buffer = None
 
         # Initialize result to prevent UnboundLocalError
         result = None
 
-        async for token in ai_service.chat_stream_with_context(chat_history):
-            result = parse_stream_token(token, accumulated, finish_buffer, streamed_fields)
+        ai_service_instance = get_ai_service()
+        async for token in ai_service_instance.chat_stream_with_context(chat_history):
+            result = parse_stream_token(token, accumulated, finish_buffer, streamed_fields, thought_buffer)
 
             # Update state
             accumulated = result.accumulated
             finish_buffer = result.finish_buffer
             streamed_fields = result.streamed_fields
+            thought_buffer = result.thought_buffer
 
             # Stream outputs
             for output in result.outputs:
@@ -66,7 +92,8 @@ class AgentService:
                 finish_buffer="",
                 streamed_fields=set(),
                 is_complete=True,
-                final_answer="I apologize, but I couldn't generate a response. Please try again."
+                final_answer="I apologize, but I couldn't generate a response. Please try again.",
+                thought_buffer={"has_thought": False, "thought_content": "", "thought_streamed": False}
             )
             accumulated = ""
             streamed_fields = set()

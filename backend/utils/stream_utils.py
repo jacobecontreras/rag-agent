@@ -11,11 +11,15 @@ class StreamResult(NamedTuple):
     streamed_fields: set
     is_complete: bool
     final_answer: str
+    thought_buffer: dict
 
 
 def parse_stream_token(token: str, accumulated: str, finish_buffer: str,
-                      streamed_fields: set) -> StreamResult:
+                      streamed_fields: set, thought_buffer: dict = None) -> StreamResult:
     """Parse streaming token and return updated state"""
+    if thought_buffer is None:
+        thought_buffer = {"has_thought": False, "thought_content": "", "thought_streamed": False}
+
     accumulated += token
     finish_buffer += token
     outputs = []
@@ -26,15 +30,12 @@ def parse_stream_token(token: str, accumulated: str, finish_buffer: str,
     try:
         response_data = json.loads(accumulated)
 
-        # Stream thought once
-        if "thought" in response_data and "thought" not in streamed_fields:
-            outputs.append(json.dumps({
-                "type": "agent_process",
-                "content": f"{response_data['thought']}\n\n"
-            }))
-            streamed_fields.add("thought")
+        # Store thought but don't stream yet
+        if "thought" in response_data and not thought_buffer["thought_streamed"]:
+            thought_buffer["has_thought"] = True
+            thought_buffer["thought_content"] = response_data['thought']
 
-        # Stream action once
+        # Stream action once - also stream stored thought if it exists
         if "action" in response_data and "action" not in streamed_fields:
             action_data = response_data["action"]
             action_name = action_data.get("name", "unknown")
@@ -43,6 +44,15 @@ def parse_stream_token(token: str, accumulated: str, finish_buffer: str,
 
             # Don't stream invalid tool calls, these are handled silently by error handling
             if action_name in TOOLS:
+                # Stream thought first if we have one
+                if thought_buffer["has_thought"] and not thought_buffer["thought_streamed"]:
+                    outputs.append(json.dumps({
+                        "type": "agent_process",
+                        "content": f"{thought_buffer['thought_content']}\n\n"
+                    }))
+                    thought_buffer["thought_streamed"] = True
+
+                # Stream action
                 outputs.append(json.dumps({
                     "type": "agent_process",
                     "content": f"→ {action_name}({input_display})\n"
@@ -71,10 +81,17 @@ def parse_stream_token(token: str, accumulated: str, finish_buffer: str,
                 "content": final_answer
             }))
             is_complete = True
+
+            # If we finish without an action, discard the thought (don't stream it)
+            if thought_buffer["has_thought"] and not thought_buffer["thought_streamed"]:
+                # Thought is discarded - no Agent Process will be shown
+                pass
+
         elif finish_content:
             outputs.append(json.dumps({
                 "type": "final_answer_partial",
                 "content": finish_content
             }))
 
-    return StreamResult(outputs, accumulated, finish_buffer, streamed_fields, is_complete, final_answer)
+    # Add thought_buffer to StreamResult to persist across calls
+    return StreamResult(outputs, accumulated, finish_buffer, streamed_fields, is_complete, final_answer, thought_buffer)

@@ -19,7 +19,7 @@ class ArtifactListSchema(BaseModel):
 class ArtifactDataSchema(BaseModel):
     """Schema for viewArtifactData"""
     job_name: str = Field(..., min_length=1)
-    artifact_type_id: Union[int, List[int]] = Field(..., gt=0)
+    artifact_type_id: Union[int, List[int]] = Field(...)
     limit: int = Field(default=100, gt=0)
     offset: int = Field(default=0, ge=0)
     model_config = {"extra": "forbid"}
@@ -29,7 +29,7 @@ class GrepSearchSchema(BaseModel):
     """Schema for grepSearch"""
     pattern: str = Field(..., min_length=1)
     job_name: str = Field(..., min_length=1)
-    artifact_type_id: Optional[Union[int, List[int]]] = Field(default=None, gt=0)
+    artifact_type_id: Optional[Union[int, List[int]]] = Field(default=None)
     limit: int = Field(default=50, gt=0)
     case_sensitive: bool = Field(default=False)
     model_config = {"extra": "forbid"}

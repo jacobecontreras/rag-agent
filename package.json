@@ -22,5 +22,8 @@
     "concurrently": "^8.2.2",
     "electron": "^38.1.2",
     "electron-reload": "^2.0.0-alpha.1"
+  },
+  "dependencies": {
+    "gpt-tokenizer": "^3.4.0"
   }
 }

@@ -4,17 +4,33 @@ import httpx
 from typing import AsyncGenerator
 from fastapi import HTTPException
 from dotenv import load_dotenv
+from services.settings_service import settings_service
 
 load_dotenv()
 
 class AIService:
     def __init__(self):
-        self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.model = "z-ai/glm-4.6"
+        self._settings_service = settings_service
+
+        # Get API key from database only
+        self.api_key = self._settings_service.get_api_key()
+
+        # Get model from database only
+        db_model = self._settings_service.get_model()
+        self.model = f"z-ai/{db_model}" if not db_model.startswith("z-ai/") else db_model
 
         if not self.api_key:
-            raise ValueError("AI service not configured properly: OPENROUTER_API_KEY environment variable is missing")
+            raise ValueError("AI service not configured: No API key found in database. Please configure your API key in the settings.")
+
+    def refresh_settings(self):
+        """Refresh API key and model from database"""
+        self.api_key = self._settings_service.get_api_key()
+        db_model = self._settings_service.get_model()
+        self.model = f"z-ai/{db_model}" if not db_model.startswith("z-ai/") else db_model
+
+        if not self.api_key:
+            raise ValueError("AI service not configured: No API key found in database. Please configure your API key in the settings.")
 
     async def chat_stream_with_context(self, input_data) -> AsyncGenerator[str, None]:
         """Send messages to AI and stream response tokens in real-time
@@ -89,5 +105,12 @@ class AIService:
                 )
 
 
-# Global instance
-ai_service = AIService()
+# Global instance - lazy initialization
+ai_service = None
+
+def get_ai_service():
+    """Get or create the AI service instance"""
+    global ai_service
+    if ai_service is None:
+        ai_service = AIService()
+    return ai_service
