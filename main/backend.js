@@ -16,6 +16,7 @@ function watchBackendFiles() {
 
   fileWatcher = fs.watch(backendDir, { recursive: true }, (eventType, filename) => {
     if (!filename || !filename.endsWith('.py')) return;
+    if (filename.includes('venv') || filename.includes('__pycache__')) return;
 
     console.log(`Backend file changed: ${filename}`);
 
@@ -34,7 +35,7 @@ function watchBackendFiles() {
 // Start backendProcess and handle console logs
 function startBackend() {
   // Always spawn the backend process
-  const options = config.backend.stdio ? {stdio: config.backend.stdio} : {};
+  const options = config.backend.stdio ? { stdio: config.backend.stdio } : {};
   backendProcess = spawn(config.backend.pythonCommand, config.backend.args, options);
 
   backendProcess.stdout.on('data', (data) => {

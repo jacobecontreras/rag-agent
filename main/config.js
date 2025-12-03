@@ -26,7 +26,11 @@ module.exports = {
 
   // Backend configuration
   backend: {
-    pythonCommand: 'python3',
+    pythonCommand: (() => {
+      const venvPath = path.join(__dirname, '..', 'backend', 'venv', 'bin', 'python');
+      const fs = require('fs');
+      return fs.existsSync(venvPath) ? venvPath : 'python3';
+    })(),
     args: ['-c', 'import sys; sys.path.insert(0, "backend"); import main; import uvicorn; uvicorn.run(main.app, host="0.0.0.0", port=8000)'],
     cwd: path.join(__dirname, '..'),
     stdio: 'pipe'
